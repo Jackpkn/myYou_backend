@@ -1,0 +1,7 @@
+GET http://localhost:3000
+
+//! Post request for signUp
+POST  http://localhost:3000/auth/signUp
+
+//! Post request for login 
+POST  http://localhost:3000/auth/login
