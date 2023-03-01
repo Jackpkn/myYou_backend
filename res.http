@@ -1,7 +1,31 @@
 GET http://localhost:3000
 
-//! Post request for signUp
-POST  http://localhost:3000/auth/signUp
+### SignUp
+###Login Route
+POST http://localhost:3000/auth/signUp
+Content-Type: application/json
 
-//! Post request for login 
+{
+  "email": "jacnd1gmail.",
+  "password": "123",
+  "name": "pawan"
+}
+### signIn 
 POST  http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "jacnd1@gmail.com",
+  "password": "1234",
+   
+  
+}
+###
+
+POST http://localhost:3000/api/google-signin
+Content-Type: application/json
+
+{
+  "email": "jack@gmail.com",
+  "password": "123"
+}

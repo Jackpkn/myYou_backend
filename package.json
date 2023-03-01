@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/Jackpkn/myYou_backend#readme",
   "dependencies": {
+    "@hapi/joi": "^17.1.1",
     "assert": "^2.0.0",
+    "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "config": "^3.3.9",

@@ -8,9 +8,8 @@ const bodyParser = require("body-parser");
 require('dotenv').config();
 
 const app = express();
-const port = 4000;
+const port = 3000;
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 // Set up middleware
 app.use(cors());
 app.use(helmet());
@@ -50,7 +49,7 @@ app.post('/api/google-signin', async (req, res) => {
       email: payload.email,
       picture: payload.picture
     }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
+    const user = User 
     // Return the JWT to the client
     res.json({ token });
   } catch (err) {
@@ -63,3 +62,4 @@ app.post('/api/google-signin', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+//!login sign up integration google sign in 
