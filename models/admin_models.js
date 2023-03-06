@@ -1,28 +1,36 @@
 const mongoose = require("mongoose");
+const ratingSchema = require("./ratings");
 const adminModel = new mongoose.Schema({
-   
-    price: {
-        type: Number,
-        required: true,
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
+  },
 
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    frontImage: {
-        type: String,
-        required: true,
-
-    },
-    productDetails: {
-        type: String,
-    },
-    images: []
-
-
-
-
-
-})
-module.exports = adminModel;
+  images: [
+    {
+      type: String,
+      required: true,
+    }
+  ],
+  price: {
+    type: String,
+    required: true,
+  },
+  quantity: {
+    type: String,
+    required: true,
+  },
+  category: {
+    type: String,
+    required: true,
+  },
+  ratings: [ratingSchema],
+});
+const Product = mongoose.model("Product", adminModel);
+module.exports = Product;
