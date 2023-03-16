@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const { adminModel } = require("./product_model");
+// const { Product } = require("./admin_models");
+const kycModel = require("../models/kycmodel");
 const user_Auth_schema = mongoose.Schema({
   name: {
     type: String,
     required: true,
     // lowercase: true,
-    trim:true
+    trim: true,
   },
   email: {
-    required:true,
+    required: true,
     type: String,
-     trim: true,
+    trim: true,
     // lowercase: true,
     // unique: true,
     validator: {
@@ -26,13 +29,27 @@ const user_Auth_schema = mongoose.Schema({
     type: String,
     required: true,
   },
+  
+  // address: {
+  //   type: String,
+  //   default: "",
+  // },
+  address: [kycModel],
   type: {
     type: String,
-    default: 'user'
+    default: "USER",
+    // enum: ["ADMIN", "USER"],
   },
+
   cart: [
-     
-  ]
+    {
+      product: adminModel,
+      quantity: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
 });
 const User = mongoose.model("user", user_Auth_schema);
 
@@ -57,18 +74,17 @@ module.exports = User;
 //   }
 // };
 
-
 // ^ matches the start of the string
 // (?=.*[a-z]) checks if the string contains at least one lowercase letter
 // (?=.*[A-Z]) checks if the string contains at least one uppercase letter
 // (?=.*\d) checks if the string contains at least one digit
 // [A-Za-z\d]{8,} matches the actual password, which must be at least 8 characters long and can only contain letters and digits
 // $ matches the end of the string
- // validator: {
-    //   validator: (value) => {
-    //     const passwordRegex =
-    //       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    //     return value.match(passwordRegex);
-    //   },
-    //   msg: "The password must contain at least one lowercase letter, one digit , and password must be 8 characters long",
-    // },
+// validator: {
+//   validator: (value) => {
+//     const passwordRegex =
+//       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+//     return value.match(passwordRegex);
+//   },
+//   msg: "The password must contain at least one lowercase letter, one digit , and password must be 8 characters long",
+// },
