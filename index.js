@@ -4,26 +4,28 @@ const app = express();
 const httpError = require("http-errors");
 const cors = require("cors");
 const morgan = require("morgan");
-const productRouter = require("./routes/products")
+const productRouter = require("./routes/products");
 const AuthRoute = require("./routes/authontication");
 //insert authontication
 require("./routes/authontication");
 require("./mongodb_connection");
-const AdminRoute = require('./routes/adminadd')
-const userRouter = require('./routes/user')
-const product = require('./routes/products')
+const AdminRoute = require("./routes/admin/adminadd");
+const userRouter = require("./routes/user");
+const product = require("./routes/products");
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(express.static("public"));
 const port = process.env.PORT;
 
 app.get("/", (req, res) => {
   res.send("successfully connected");
 });
 app.use("/", AuthRoute);
-app.use('/', AdminRoute);
-app.use("/",userRouter )
-app.use( '/', productRouter);
+app.use("/", AdminRoute);
+app.use("/", userRouter);
+app.use("/", productRouter);
+app.use("/upload", express.static("upload"));
 // for handling http error
 app.use(async (req, res, next) => {
   next(httpError.NotFound());
@@ -38,6 +40,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(port,'0.0.0.0', () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`server is running on localhost://${port}`);
 });

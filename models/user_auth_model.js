@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const { adminModel } = require("./product_model");
 // const { Product } = require("./admin_models");
 const kycModel = require("../models/kycmodel");
+// const { favourites } = require("./favourites");
 const user_Auth_schema = mongoose.Schema({
   name: {
     type: String,
@@ -25,22 +26,33 @@ const user_Auth_schema = mongoose.Schema({
       msg: "Please Enter a valid email address",
     },
   },
+  userName: {
+    type: String,
+  },
   password: {
     type: String,
     required: true,
   },
-  
-  // address: {
-  //   type: String,
-  //   default: "",
-  // },
+  phone: {
+    type: Number,
+  },
+
+  image: {
+    type: String,
+  },
+
   address: [kycModel],
   type: {
     type: String,
     default: "USER",
     // enum: ["ADMIN", "USER"],
   },
-
+  wishlist: [
+    {
+      type: String,
+      ref: "Product",
+    },
+  ],
   cart: [
     {
       product: adminModel,

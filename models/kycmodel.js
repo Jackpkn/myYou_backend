@@ -1,12 +1,16 @@
 const mongoose = require("mongoose");
 const kycSchema = mongoose.Schema({
-  fistName: {
+  firstName: {
     type: String,
-    required: true,
+    // required: true,
   },
   middleName: {
     type: String,
     required: true,
+  },
+  lastName:{
+    type: String,
+    // required: true,
   },
   addressLine1: {
     type: String,
@@ -24,17 +28,18 @@ const kycSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  locality: {
-    type: String,
-    required: true,
-  },
+ 
   landmark: {
     type: String,
     required: true,
   },
+  locality: {
+    type: String,
+    // required: true,
+  },
   mobileNumber: {
     type: String,
-    required: true,
+    // required: true,
   },
   emailAddress: {
     type: String,
