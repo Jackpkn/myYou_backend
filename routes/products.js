@@ -2,9 +2,24 @@ const express = require("express");
 const auth = require("../middlewares/auth_middlewares");
 const productRouter = express.Router();
 const { Product } = require("../models/product_model");
-
+const { match } = require("assert");
+class ApiService {
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
+  filtering() {
+    const queryObj = { ...this.queryString };
+    let excludedFields = ["page", "sort", "limit", "fields"];
+    excludedFields.forEach((el) => delete queryObj[el]);
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    this.query.find(JSON.parse(queryStr));
+    return this;
+  }
+}
 //? get product by query
-productRouter.get("/api/get-products", auth, async (req, res) => {
+productRouter.get("/api/get-products", async (req, res) => {
   try {
     const products = await Product.find({ category: req.query.category });
     res.json(products);
@@ -14,57 +29,68 @@ productRouter.get("/api/get-products", auth, async (req, res) => {
 });
 productRouter.get("/api/filer", async (req, res) => {
   try {
+    const { category } = req.query;
     const queryObject = { ...req.query };
-    const excludedField = ["page", "sort", "limit", "fields"];
-    excludedField.forEach((el) => delete queryObject(el));
+    // const excludedField = ["page", "sort", "limit", "fields"];
+    // excludedField.forEach((el) => delete queryObject(el));
     let queryStr = JSON.stringify(queryObject);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g);
     let query = Product.find(JSON.parse(queryStr));
-    if (req.query.sort) {
+
+    if (RegExp(req.query.sort, "i")) {
       let sortFix = req.query.sort.split(",").join(" ");
       query = query.sort(sortFix);
     } else {
       query = query.sort("-createdAt ");
     }
     // limiting the fields (selected field will be show)
-    if (req.query.fields) {
+    if (RegExp(req.query.fields, "i")) {
       const fields = req.query.fields.split(",").join(" ");
     } else {
       query = query.select("-__v");
     }
+
+    //
     // pagination
     const page = req.query.page;
     const limit = req.query.limit | 10; //default per page 10
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
-    const products = await query;
+    const products = await RegExp(query, "i");
 
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
- 
+
 // find by search
 productRouter.get("/api/search", async (req, res) => {
   try {
     const { category, price, sort } = req.query;
-    const queryObject = {};
-    let product = Product.find(queryObject);
+    let queryObject = {};
+    // const products = new ApiService(Product.find(), req.query).filtering();
+    
+     
+    // let prices= parseInt(product.price);
+
     if (category) {
       queryObject.category = { $regex: category, $options: "i" };
+      //  category = category
     }
     if (price) {
       queryObject.price = price;
     }
+   
+    let product = await Product.find(queryObject);
     if (sort) {
-      let sortFix = sort.replace(",", " ");
-      product = product.sort(sortFix);
+      // let sortFix = req.query.sort.split(",").join(" ");
+      // let sortFix = sort.replace(",").join(" ");
+      product = product.sort();
     }
-    const data = await product;
-    console.log(queryObject);
+    console.log(product);
 
-    res.json({ data });
+    res.json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -72,7 +98,7 @@ productRouter.get("/api/search", async (req, res) => {
 
 productRouter.post("/api/rate-product", auth, async (req, res) => {
   try {
-    const { id, rating, message } = req.body;
+    const { id, star, message } = req.body;
     let product = await Product.findById(id);
 
     for (let i = 0; i < product.ratings.length; i++) {
@@ -83,7 +109,7 @@ productRouter.post("/api/rate-product", auth, async (req, res) => {
     }
     const ratingSchema = {
       userId: req.user,
-      rating,
+      star,
       message,
     };
     product.ratings.push(ratingSchema);
@@ -94,4 +120,5 @@ productRouter.post("/api/rate-product", auth, async (req, res) => {
   }
 });
 
+ 
 module.exports = productRouter;

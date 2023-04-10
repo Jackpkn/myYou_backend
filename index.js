@@ -6,12 +6,12 @@ const cors = require("cors");
 const morgan = require("morgan");
 const productRouter = require("./routes/products");
 const AuthRoute = require("./routes/authontication");
-//insert authontication
-require("./routes/authontication");
-require("./mongodb_connection");
 const AdminRoute = require("./routes/admin/adminadd");
 const userRouter = require("./routes/user");
-const product = require("./routes/products");
+const categoryRoute = require("./routes/category");
+
+require("./routes/authontication");
+require("./mongodb_connection");
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
@@ -25,7 +25,8 @@ app.use("/", AuthRoute);
 app.use("/", AdminRoute);
 app.use("/", userRouter);
 app.use("/", productRouter);
-app.use("/upload", express.static("upload"));
+app.use("/", categoryRoute);
+// app.use("/upload", express.static("upload"));
 // for handling http error
 app.use(async (req, res, next) => {
   next(httpError.NotFound());

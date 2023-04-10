@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { adminModel } = require('./product_model');
+const { adminModel } = require("./product_model");
 
 const orderSchema = mongoose.Schema({
   products: [
@@ -30,6 +30,9 @@ const orderSchema = mongoose.Schema({
   status: {
     type: Number,
     default: 0,
+  },
+  transactionId: {
+    type: String,
   },
 });
 

@@ -5,6 +5,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const { Product } = require('./product_model');
 
 const app = express();
 app.use(bodyParser.json());
@@ -118,3 +119,145 @@ async function getFavourite(req, res, next) {
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server started on port ${port}`));
 // ```
+
+
+
+
+exports.addToWishlist = async (req, res) => {
+  const { userId, productId } = req.body;
+
+  try {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(400).json({ message: 'Product not found' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: { wishlist: { product: product } },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ message: 'Product added to wishlist', wishlist: updatedUser.wishlist });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding product to wishlist', error: error.message });
+  }
+};
+
+exports.removeFromWishlist = async (req, res) => {
+  const { userId, productId } = req.body;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { wishlist: { product: productId } } },
+      { new: true }
+    );
+
+    res.status(200).json({ message: 'Product removed from wishlist', wishlist: updatedUser.wishlist });
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing product from wishlist', error: error.message });
+  }
+};
+
+exports.getWishlist = async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+    const user = await User.findById(userId).populate('wishlist.product');
+
+    res.status(200).json({ wishlist: user.wishlist });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching wishlist', error: error.message });
+  }
+};
+
+
+userRouter.delete("/api/delete-cart/:id", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    let user = await User.findById(req.user);
+    for (let i = 0; i < user.cart.length; i++) {
+      if (user.cart[i].product._id.equals(product._id)) {
+        if (user.cart[i].quantity >= 1) {
+          // user.cart[i].quantity +=2;
+        }
+      }
+    }
+
+    res.status(200).json({ msg: "product successfully deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+userRouter.put("/api/favourite", auth, async (req, res) => {
+  try {
+    // const { id } = req.params;
+    // let user = await User.findById(req.user);
+    // const product = Product.findById(id);
+    // const exit = user.wishlist.find((ids) => ids.toString() == id);
+    // if (exit) {
+    //   await findByIdAndDelete(id, { new: true });
+    // } else {
+    //   user.cart.wishlist.push(product);
+    // }
+    // const existingFavourite = await favourite.findOne({ user, id });
+    // if (existingFavourite) {
+    //   await favourite.deleteOne({ user, id });
+    //   // res.json({msg: ""})
+    // } else {
+    //   await favourite.insertOne({ user, id });
+    // }
+    // res.json({ msg: "ok" });
+    const { id } = req.body;
+    let user = await User.findById(req.user);
+    const product = Product.findById(id);
+    const updatedCart = user.cart.filter(
+      (item) => item.product._id.toString() !== id
+    );
+    if (updatedCart) {
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user,
+        { $pull: { wishlist: { product: product } } },
+        { new: true }
+      );
+      res.json(updatedUser);
+    } else {
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user,
+        { $pull: { wishlist: { product: id } } },
+        { new: true }
+      );
+      res.json(updatedUser);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+userRouter.get("/api/get-all-favourite", auth, async (req, res) => {
+  try {
+    const fav = favourite.findById({ userId: req.user });
+    res.status(200).json(fav);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});

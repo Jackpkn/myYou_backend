@@ -87,21 +87,23 @@ authRouter.post("/auth/login", async (req, res, next) => {
 
 //              ???????????????????????????????????????????????????
 
-authRouter.post("/tokenValid", async (req, res) => {
+authRouter.post("/auth/tokenValid", async (req, res) => {
   try {
     const token = req.header("x-auth-token");
     if (!token) return res.json(false);
     const verified = jwt.verify(token, "passwordKey");
+    console.log(token);
     if (!verified) return res.json(false);
     const user = await user_Schema.findById(verified.id);
     if (!user) return res.json(false);
+    res.json(true);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-authRouter.get("/getUser", auth, async (req, res) => {
+authRouter.get("/auth/getUser", auth, async (req, res) => {
   const user = await user_Schema.findById(req.user);
-  res.json({ ...this.use._doc, token: req.token });
+  res.json({ ...user._doc, token: req.token });
 });
 
 //              ??????????????????????????????????????????????????!
@@ -254,10 +256,17 @@ authRouter.post("/auth/save-user-address", auth, async (req, res) => {
     console.log(error);
   }
 }),
-  authRouter.put("/auth/update-user-profile/:id", async (req, res) => {
+  authRouter.put("/auth/update-user-profile/:id",  async (req, res) => {
     try {
       const { name, email, userName, phone } = req.body;
-
+      const doesExist = await user_Schema.findOne({ email });
+      if (doesExist) {
+        return res
+          .status(404)
+          .json({ msg: "User with same email already exists!" });
+        // throw createError.Conflict(`${email} is already been registered`);
+      }
+     
       const updatedUser = await User.findByIdAndUpdate(
         req.params.id,
         {
@@ -332,12 +341,14 @@ authRouter.put("/auth/update-user-address", async (req, res) => {
   }
 });
 
+
 module.exports = authRouter;
+
 
 function validateAddress(address) {
   const Joi = require("joi");
-
   const schema = Joi.object({
+
     firstName: Joi.string().required(),
     middleName: Joi.string().required(),
     addressLine1: Joi.string().required(),
@@ -350,7 +361,7 @@ function validateAddress(address) {
     emailAddress: Joi.string().trim().email().required(),
     aadhaarNumber: Joi.string().required(),
     panCardNumber: Joi.string().required(),
-  });
 
+  });
   return schema.validate(address);
 }

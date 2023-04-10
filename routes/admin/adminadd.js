@@ -48,10 +48,11 @@ adminRouter.post("/admin/add-product", async (req, res) => {
     let product = new Product({
       name,
       description,
+      category,
       images,
       quantity,
       price,
-      category,
+      
     });
 
     products = await product.save();

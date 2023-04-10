@@ -4,7 +4,10 @@ const auth = require("../middlewares/auth_middlewares");
 const { Product } = require("../models/product_model");
 const User = require("../models/user_auth_model");
 const Order = require("../models/order_model");
-const { favourite } = require("../models/favourites");
+const { urlencoded } = require("body-parser");
+const productRouter = require("./products");
+// const { favourite } = require("../models/favourites");
+// const { findByIdAndDelete } = require("../models/user_auth_model");
 
 userRouter.post("/api/add-to-cart", auth, async (req, res) => {
   try {
@@ -65,24 +68,145 @@ userRouter.delete("/api/remove-from-cart/:id", auth, async (req, res) => {
 });
 //              ??????????????????????????????????????????????????!
 //              ???????????????????????????????????????????????????
-userRouter.delete("/api/delete-cart/:id", auth, async (req, res) => {
+
+userRouter.delete("/api/delete/:id", auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id);
-    let user = await User.findById(req.user);
-    for (let i = 0; i < user.cart.length; i++) {
-      if (user.cart[i].product._id.equals(product._id)) {
-        user.cart[i].remove();
-      }
+    console.log(id);
+    const user = await User.findById(req.user);
+    if (!user) {
+      return res.status(404).json({ msg: "User Not found" });
     }
 
-    res.status(200).json({ msg: "product successfully deleted" });
+    const updatedCart = user.cart.filter(
+      (item) => item.product._id.toString() !== id
+    );
+    user.cart = updatedCart;
+
+    const afterDelete = await user.save();
+    res.json(afterDelete);
+    // console.log(j);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+//              ??????????????????????????????????????????????????!
+//              ???????????????????????????????????????????????????
+
+// add to wishList
+userRouter.put("/api/addToWishList", auth, async (req, res) => {
+  try {
+    const { id } = req.body;
+    // const product = await Product.findById(id);
+    // console.log(product)
+    let user = await User.findById(req.user);
+
+    const alreadyAdded = user.wishlist.find((ids) => ids.toString() === id);
+    //  console.log(alreadyAdded)
+    if (alreadyAdded) {
+      let user = await User.findByIdAndUpdate(
+        // we can do one thing here we can push all
+        req.user,
+
+        { $pull: { wishlist: id } },
+        // { $pull: { wishlist: { product: product } } },
+
+        { new: true }
+      );
+      res.json(user);
+      console.log(user);
+    } else {
+      let user = await User.findByIdAndUpdate(
+        req.user,
+        {
+          $push: {
+            wishlist: id,
+          },
+          // $pull: { wishlist: { product: product } }
+        },
+        { new: true }
+      );
+      res.json(user);
+      console.log(user);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    console.log(error);
+  }
+});
+userRouter.get("/api/getWishProduct", auth, async (req, res) => {
+  try {
+    const wishProduct = await User.findById(req.user).populate("wishlist");
+    res.json(wishProduct);
+    console.log(wishProduct);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-//! fetch user order
+userRouter.put("/api/rating", auth, async (req, res) => {
+  try {
+    // const { id } = req.user; // give the id of signed in user
+    const { id, star, message } = req.body;
+    const product = await Product.findById(id);
+    // const alreadyRated = product.ratings.find(
+    //   (userId) => userId.postedBy.toString() === req.user._id.toString()
+    // );
+    const alreadyRated = product.ratings.find(
+      (userId) => userId.postedBy.toString() === req.user._id
+    );
+    if (alreadyRated) {
+      const updateRating = await Product.findByIdAndUpdate(
+        id,
+        {
+          ratings: { $elemMatch: alreadyRated },
+        },
+        {
+          $set: {
+            "ratings.$.star": star,
+            "ratings.$.message": message,
+            // "ratings.$.postedBy": req.user,
+          },
+        },
+        {
+          new: true,
+        }
+      );
+      // res.json(updateRating);
+    } else {
+      const rateProduct = await Product.findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            ratings: {
+              star: star,
+              postedBy: req.user,
+              message: message,
+            },
+          },
+        },
+        { new: true }
+      );
+      // res.json(rateProduct);
+    }
+    const getAllRating = await Product.findById(id);
+    let totalRating = getAllRating.ratings.length;
+    let ratingSum = getAllRating.ratings
+      .map((item) => item.star)
+      .reduce((prev, curr) => prev + curr, 0);
+    let actualRating = Math.round(ratingSum / totalRating);
+    let finalProduct = await Product.findByIdAndUpdate(
+      id,
+      { totalRating: actualRating },
+      { new: true }
+    );
+    res.json(finalProduct);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 userRouter.post("/api/user-order", auth, async (req, res) => {
   try {
     const { cart, totalPrice, address } = req.body;
@@ -113,8 +237,7 @@ userRouter.post("/api/user-order", auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-//              ??????????????????????????????????????????????????!
-//              ???????????????????????????????????????????????????
+
 userRouter.get("/api/get-user-order", auth, async (req, res) => {
   try {
     const order = Order.findById({ userId: req.user });
@@ -123,134 +246,45 @@ userRouter.get("/api/get-user-order", auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-userRouter.put("/api/favourite/:id", auth, async (req, res) => {
-  try {
-    const itemId = req.params.id;
-    let user = await User.findById(req.user);
-    const existingFavourite = await favourite.findOne({ user, itemId });
-    if (existingFavourite) {
-      await favourite.deleteOne({ user, itemId });
-      // res.json({msg: ""})
-    } else {
-      await favourite.insertOne({ user, itemId });
-    }
-    res.json({ msg: "ok" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-userRouter.get("/api/get-all-favourite", auth, async (req, res) => {
-  try {
-    const fav = favourite.findById({ userId: req.user });
-    res.status(200).json(fav);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-// add to wishList
-userRouter.put("/api/addToWishList", auth, async (req, res) => {
- 
- 
 
+//? like the product
+userRouter.put("/api/like/:id", auth, async (req, res) => {
   try {
-   
-    const { id } = req.body;
-    const product = await Product.findById(id);
-    // console.log(product)
-    let user = await User.findById(req.user);
-    
-    const alreadyAdded = user.wishlist.find(
-      (ids) => ids.toString() === id
+    const { id } = req.params.id;
+    // const product =await Product.findById(id);
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        $inc: { like: 1 },
+      },
+      {
+        new: true,
+      }
     );
-    //  console.log(alreadyAdded)
-    if (alreadyAdded) {
-      let user = await User.findByIdAndUpdate(
-        req.user,
-        {
-          $pull: { wishlist: id },
-        },
-        { new: true }
-      );
-      res.json(user);
-      console.log(user);
-    } else {
-      let user = await User.findByIdAndUpdate(
-        req.user,
-        {
-          $push: { wishlist: id },
-        },
-        { new: true }
-      );
-      res.json(user);
-      console.log(user);
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-    console.log(error);
-  }
-});
-userRouter.get("/api/getWishProduct", auth, async (req, res) => {
-  
-  try {
-    const wishProduct = await User.findById(req.user).populate("wishlist");
-    res.json(wishProduct);
-    console.log(wishProduct)
+    res.json(product);
+    console.log(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
-userRouter.put("/api/rating", auth, async (req, res) => {
+userRouter.put("/api/disLike/:id", auth, async (req, res) => {
   try {
-    const { id } = req.user; // give the id of signed in user
-    const { star, productId, message } = req.body;
-    const product = await Product.findById(productId);
-    const alreadyRated = product.ratings.find(
-      (userId) => userId.postedBy.toString() === id.toString()
-    );
-    if (alreadyRated) {
-      const updateRating = await Product.updateOne(
-        {
-          ratings: { $elemMatch: alreadyRated },
-        },
-        {
-          $set: { "ratings.$.star": star, "ratings.$.message": message },
-        },
-        {
-          new: true,
-        }
-      );
-      res.json(updateRating);
-    } else {
-      const rateProduct = await Product.findByIdAndUpdate(
-        productId,
-        {
-          $push: {
-            ratings: {
-              star: star,
-              postedBy: id,
-              message: message,
-            },
-          },
-        },
-        { new: true }
-      );
-      res.json(rateProduct);
-    }
-    const getAllRating = await Product.findById(productId);
-    let totalRating = getAllRating.ratings.length;
-    let ratingSum = getAllRating.ratings
-      .map((item) => item.star)
-      .reduce((prev, curr) => prev + curr, 0);
-    let actualRating = Math.round(ratingSum / totalRating);
-    let finalProduct = await Product.findByIdAndUpdate(
-      productId,
-      { totalRating: actualRating },
+    // const { id } = req.params.id;
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { disLike: 1 } },
       { new: true }
     );
-    res.json(finalProduct);
+
+    res.json(product);
+    console.log(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 module.exports = userRouter;
+
+// for (int j =0; j<product.rating.length; j++){
+//
+// }
