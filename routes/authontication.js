@@ -7,14 +7,54 @@ const uploadImage = require("../middlewares/multer");
 
 const auth = require("../middlewares/auth_middlewares");
 const user_Schema = require("../models/user_auth_model");
-const client = require("twilio")(
-  process.env.ACCOUNT_SID,
-  process.env.AUTH_TOKEN
-);
+// const client = require("twilio")(
+//   process.env.ACCOUNT_SID,
+//   process.env.AUTH_TOKEN
+// );
 const expressAsyncHandler = require("express-async-handler");
 const User = require("../models/user_auth_model");
-const { default: mongoose } = require("mongoose");
+const { OAuth2Client } = require("google-auth-library");
+const CLIENT_id = process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_API_ID
+const oAuth2Client = new OAuth2Client(CLIENT_id)
+ 
 const kycModel = require("../models/kycmodel");
+authRouter.post('/api/auth/google-signin', async (req, res) => {
+  const { idToken, accessToken } = req.body;
+
+  try {
+    console.log('jack')
+    const googleUser = await oAuth2Client.verifyIdToken({ idToken, audience: CLIENT_ID });
+
+    if (!googleUser) {
+      return res.status(401).json({ message: 'Google verification failed.' });
+    }
+
+    const payload = googleUser.getPayload();
+
+//     //     // Check if the user exists in your database
+    let user = await User.findOne({ googleId: payload.sub });
+
+    if (!user) {
+//       //       // If the user does not exist, create a new user
+      user = new User({
+        googleId: payload.sub,
+        email: payload.email,
+        name: payload.name,
+        image: payload.picture,
+      });
+
+      await user.save();
+    }
+
+//     //     // Generate your unique JWT token for this user or perform other actions
+
+    res.status(200).json(user);
+    console.log('success');
+  } catch (error) {
+    res.status(500).json({ message: 'Error occurred during authentication.' });
+  }
+});
+
 
 //              ??????????????????????????????????????????????????!
 
@@ -191,12 +231,12 @@ authRouter.post(
             },
           }
         ).then(res.status(200).json({ msg: "Password changed successfully" }));
-      } else {
+      } else {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
         return res.status(401).json({ msg: "Password didn't match" });
       }
     } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
+        return res.status(400).json({ error: error.message });
+      }
   })
 );
 
@@ -256,7 +296,7 @@ authRouter.post("/auth/save-user-address", auth, async (req, res) => {
     console.log(error);
   }
 }),
-  authRouter.put("/auth/update-user-profile/:id",  async (req, res) => {
+  authRouter.put("/auth/update-user-profile/:id", async (req, res) => {
     try {
       const { name, email, userName, phone } = req.body;
       const doesExist = await user_Schema.findOne({ email });
@@ -266,7 +306,7 @@ authRouter.post("/auth/save-user-address", auth, async (req, res) => {
           .json({ msg: "User with same email already exists!" });
         // throw createError.Conflict(`${email} is already been registered`);
       }
-     
+
       const updatedUser = await User.findByIdAndUpdate(
         req.params.id,
         {

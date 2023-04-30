@@ -6,7 +6,7 @@ const categoryRoute = express.Router();
 
 const admin = require("../middlewares/admin");
 const auth = require("../middlewares/auth_middlewares");
-categoryRoute.post("/category/add-product", admin, async (req, res) => {
+categoryRoute.post("/category/add-product", async (req, res) => {
   try {
     const { types, image, categoryName, strPrice } = req.body;
 
@@ -25,35 +25,29 @@ categoryRoute.post("/category/add-product", admin, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-categoryRoute.delete(
-  "/category/delete-product",
 
-  admin,
-  async (req, res) => {
-    try {
-      const { id } = req.body;
-      const category = await categoryM.findByIdAndDelete(id);
-      // await category.save();
-      res.json(category);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+categoryRoute.get("/category/get-all-product", async (req, res) => {
+  try {
+    const category = await categoryM.find({ types: req.query.types });
+    res.status(200).json(category);
+    // console.log(category);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
+}
 );
-categoryRoute.get(
-  "/category/get-all-product",
-  admin,
-  auth,
-  async (req, res) => {
-    try {
-      const category = await categoryM.find({});
-      res.json(category);
-      console.log(category);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+categoryRoute.delete("/category/delete-product", async (req, res) => {
+  try {
+    const { id } = req.body;
+    const category = await categoryM.findByIdAndDelete(id);
+    // await category.save();
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
+}
 );
+
 
 categoryRoute.put("/category/update-product/:id", admin, async (req, res) => {
   try {

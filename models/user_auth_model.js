@@ -5,6 +5,10 @@ const { adminModel } = require("./product_model");
 const kycModel = require("../models/kycmodel");
 // const { favourites } = require("./favourites");
 const user_Auth_schema = mongoose.Schema({
+  id: {
+    type: mongoose.Schema.Types.ObjectId,
+
+  },
   userProfile: {
     type: String,
   },
@@ -59,7 +63,7 @@ const user_Auth_schema = mongoose.Schema({
   stripeCustomerId: {
     type: String,
   },
-  // wishlist: [{product: adminModel}],
+  // wishlist: [{ product: adminModel }],
   cart: [
     {
       product: adminModel,

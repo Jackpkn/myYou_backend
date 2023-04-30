@@ -79,7 +79,7 @@ adminRouter.put("/admin/update-product/:id", admin, async (req, res) => {
 
 adminRouter.get("/admin/get-product", async (req, res) => {
   try {
-    const products = new Product.find({});
+    const products = await Product.find({});
     // how to get all product
     res.json(products);
   } catch (error) {

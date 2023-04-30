@@ -144,6 +144,43 @@ userRouter.get("/api/getWishProduct", auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// userRouter.post('/wishlist', auth, async (req, res) => {
+//   const { id } = req.body;
+//   const user = await User.findById(req.user);
+//   const product = await Product.findById(id);
+
+//   if (!user) {
+//     return res.status(404).json({ msg: "User not found" });
+
+//   }
+//   if (!product) {
+//     return res.status(404).json({ message: 'Product not found' });
+//   }
+//   if (user.wishlist.length == 0) {
+//     user.wishlist.push({ product });
+//   }
+//   else {
+//     let isFound = false;
+//     for (let i = 0; i < user.wishlist.length; i++) {
+//       if (user.wishlist[i].product._id.equals(product._id)) {
+//         isProductFound = true;
+//       }
+
+//     }
+//     if (isFound) {
+//       let producttt = user.cart.find((productt) =>
+//         productt.product._id.equals(product._id)
+//       );
+//       producttt.pull(product)
+//     } else {
+//       user.wishlist.push(product);
+//     }
+//   }
+//   // const alreadyAdded = user.wishlist.find((ids) => ids.toString() === id);
+//   user = await user.save();
+//   console.log(user);
+//   res.status(200).json(user);
+// })
 
 userRouter.put("/api/rating", auth, async (req, res) => {
   try {
@@ -211,14 +248,17 @@ userRouter.post("/api/user-order", auth, async (req, res) => {
   try {
     const { cart, totalPrice, address } = req.body;
     let products = [];
-    for (let i = 0; cart.length; i++) {
+    for (let i = 0; i < cart.length; i++) {
       let product = await Product.findById(cart[i].product._id);
       if (product.quantity >= cart[i].quantity) {
         product.quantity -= cart[i].quantity;
         products.push({ product, quantity: cart[i].quantity });
-        await products.save();
-      } else {
-        return res.status(400).json({ msg: `${product.name} is out of stock` });
+        await product.save();
+      }
+      else {
+        return res
+          .status(400)
+          .json({ msg: `${product.name} is out of stock!` });
       }
     }
     let user = await User.findById(req.user);
@@ -232,7 +272,7 @@ userRouter.post("/api/user-order", auth, async (req, res) => {
       orderedAt: new Date().getTime(),
     });
     order = await order.save();
-    res.status(200).json(order);
+    res.json(order);;
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -240,8 +280,9 @@ userRouter.post("/api/user-order", auth, async (req, res) => {
 
 userRouter.get("/api/get-user-order", auth, async (req, res) => {
   try {
-    const order = Order.findById({ userId: req.user });
-    res.status(200).json(order);
+    const orders = await Order.find({ userId: req.user });
+    res.status(200).json(orders);
+    // console.log(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -250,7 +291,7 @@ userRouter.get("/api/get-user-order", auth, async (req, res) => {
 //? like the product
 userRouter.put("/api/like/:id", auth, async (req, res) => {
   try {
-    const { id } = req.params.id;
+    // const { id } = req.params.id;
     // const product =await Product.findById(id);
     const product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -272,7 +313,9 @@ userRouter.put("/api/disLike/:id", auth, async (req, res) => {
     // const { id } = req.params.id;
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { $inc: { disLike: 1 } },
+      {
+        $inc: { disLike: 1 },
+      },
       { new: true }
     );
 
@@ -282,9 +325,20 @@ userRouter.put("/api/disLike/:id", auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+userRouter.get('/api/get-reviews', auth, async (req, res) => {
+
+  try {
+    const { id } = req.body;
+    const product = await Product.findById(id);
+
+    const alreadyRated = product.ratings.find(
+      (userId) => userId.postedBy.toString() === req.user._id
+    );
+    res.status(200).json(alreadyRated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+})
 
 module.exports = userRouter;
 
-// for (int j =0; j<product.rating.length; j++){
-//
-// }

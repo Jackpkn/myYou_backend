@@ -7,12 +7,10 @@ const categoryModel = mongoose.Schema({
     required: true,
     enum: ["Appliances", "Furniture"]
   },
-  image: [
-    {
-      type: String,
-      required: true,
-    },
-  ],
+  image: {
+    type: String,
+    required: true,
+  },
   categoryName: {
     type: String,
     required: true,

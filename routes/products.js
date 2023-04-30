@@ -22,7 +22,7 @@ class ApiService {
 productRouter.get("/api/get-products", async (req, res) => {
   try {
     const products = await Product.find({ category: req.query.category });
-    res.json(products);
+    res.json(products); 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

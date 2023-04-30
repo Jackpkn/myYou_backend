@@ -261,3 +261,202 @@ userRouter.get("/api/get-all-favourite", auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+app.get('/search', function (req, res) {
+  const keyword = req.query.keyword;
+  const category = req.query.category;
+  const minPrice = req.query.minPrice;
+  const maxPrice = req.query.maxPrice;
+
+  db.collection('products').find({
+    $or: [
+      { name: { $regex: keyword, $options: 'i' } },
+      { description: { $regex: keyword, $options: 'i' } }
+    ],
+    category: category,
+    price: {
+      $gte: minPrice,
+      $lte: maxPrice
+    }
+  }, function (err, result) {
+    if (err) throw err;
+
+    const data = result.toArray();
+    res.send(data);
+  });
+});
+
+
+// To upload an image to Amazon S3 using Flutter and Node.js, follow these steps:
+
+// Set up an Amazon S3 bucket
+// First, sign in to your AWS Management Console and create a new S3 bucket or use an existing one.
+// Set up Node.js server
+// Create a Node.js project by running npm init.
+
+// Install the required packages: aws - sdk, express, cors, and multer using npm.
+
+// npm install aws - sdk express cors multer
+// Configure the Node.js server
+// In your project, create a new file called server.js, and add the following code to set up the server:
+// const express = require('express');
+// const cors = require('cors');
+// const multer = require('multer');
+// const AWS = require('aws-sdk');
+
+// const app = express();
+// app.use(cors());
+
+// const storage = multer.memoryStorage({
+//   destination: function (req, file, callback) {
+//     callback(null, '');
+//   }
+// });
+// const upload = multer({ storage }).single('image');
+
+// const s3 = new AWS.S3({
+//   accessKeyId: 'YOUR_S3_ACCESS_KEY',
+//   secretAccessKey: 'YOUR_S3_SECRET_ACCESS_KEY',
+//   region: 'YOUR_S3_REGION'
+// });
+
+// app.post('/upload', upload, (req, res) => {
+//   const params = {
+//     Bucket: 'YOUR_S3_BUCKET_NAME',
+//     Key: req.file.originalname,
+//     Body: req.file.buffer,
+//     ContentType: req.file.mimetype,
+//     ACL: 'public-read'
+//   };
+
+//   s3.upload(params, (err, data) => {
+//     if (err) {
+//       return res.status(500).send(err);
+//     }
+//     res.status(200).send(data.Location);
+//   });
+// });
+
+// const port = process.env.PORT || 3000;
+// app.listen(port, () => console.log(`Server started on port ${port}`));
+// Replace 'YOUR_S3_ACCESS_KEY', 'YOUR_S3_SECRET_ACCESS_KEY', 'YOUR_S3_REGION', and 'YOUR_S3_BUCKET_NAME' with your actual S3 credentials and bucket name.
+
+// Start the Node.js server
+// Run node server.js to start the server.
+// Create a Flutter app and add a dependency
+// Create a new Flutter app using the flutter create command if you don't already have one.
+// In your pubspec.yaml file, add the following dependency:
+// dependencies:
+//    ...
+// http: ^ 0.13.3
+// Create a Flutter UI for image selection and upload
+// In your main.dart file or another screen - specific file, build a simple UI that allows the user to select an image from their device and then upload it to S3.
+//   import 'dart:convert';
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:http/http.dart' as http;
+// import 'package:image_picker/image_picker.dart';
+
+// class ImageUploadScreen extends StatefulWidget {
+//   @override
+//   _ImageUploadScreenState createState() => _ImageUploadScreenState();
+// }
+
+// class _ImageUploadScreenState extends State<ImageUploadScreen> {
+//   File _selectedImage;
+//   final picker = ImagePicker();
+//   bool _isLoading = false;
+
+//   Future pickImage() async {
+//     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+//   setState(() {
+//     if (pickedFile != null) {
+//       _selectedImage = File(pickedFile.path);
+//     } else {
+//       print('No image selected.');
+//     }
+//   });
+// }
+
+// // Method to upload the image to the Node.js server.
+// Future < void> uploadImage(File imageFile) async {
+//     String apiUrl = "http://your_api_url:PORT/upload";
+//   try {
+//     setState(() {
+//       _isLoading = true;
+//     });
+
+//     var imageBytes = imageFile.readAsBytesSync();
+//       String base64Image = base64Encode(imageBytes);
+
+//       final response = await http.post(
+//       Uri.parse(apiUrl),
+//       headers: { "Content-Type": "application/json" },
+//       body: json.encode({
+//         "image": base64Image,
+//         "name": _selectedImage.path.split('/').last,
+//       }),
+//     );
+
+//     setState(() {
+//       _isLoading = false;
+//     });
+
+//     if (response.statusCode == 200) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Image uploaded successfully")),
+//       );
+//     } else {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Image upload failed")),
+//       );
+//     }
+//   } catch (error) {
+//     print(error);
+//     setState(() {
+//       _isLoading = false;
+//     });
+//   }
+// }
+
+// @override
+//   Widget build(BuildContext context) {
+//   return Scaffold(
+//     appBar: AppBar(title: Text('S3 Image Upload')),
+//     body: Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         crossAxisAlignment: CrossAxisAlignment.center,
+//         children: [
+//         _selectedImage != null
+//           ? Image.file(_selectedImage)
+//           : Text("No image selected"),
+//         SizedBox(height: 20),
+//         OutlinedButton.icon(
+//           onPressed: pickImage,
+//           icon: Icon(Icons.photo),
+//           label: Text("Select Image"),
+//         ),
+//         SizedBox(height: 20),
+//         _isLoading
+//           ? CircularProgressIndicator()
+//           : OutlinedButton.icon(
+//             onPressed: _selectedImage != null
+//             ? () {
+//               uploadImage(_selectedImage);
+//             }
+//             : null,
+//             icon: Icon(Icons.cloud_upload),
+//             label: Text("Upload Image"),
+//           ),
+//       ],
+//       ),
+//     ),
+//   );
+// }
+// }
+// Replace your_api_url:PORT with the actual URL and port of your Node.js server.
+
+//   Now, you have a working Flutter app that allows users to select an image from their device and upload it to Amazon S3 using Node.js as an intermediary server.
