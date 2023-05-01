@@ -224,7 +224,7 @@ authRouter.post(
       const user = await User.findById(req.user);
       if (await bcrypt.compare(req.body.currentPassword, user.password)) {
         User.updateOne(
-          { _id: mongoose.Types.ObjectId(req.user.id) },
+          { _id: mongoose.Types.ObjectId(req.user) },
           {
             $set: {
               password: await bcrypt.hash(req.body.newPassword, 10),
@@ -380,7 +380,8 @@ authRouter.put("/auth/update-user-address", async (req, res) => {
     console.log(error);
   }
 });
-
+// firebase chat app differential equation project DSA server that the equation which is come in picture that why this is amazing picture of the download the 
+// that will
 
 module.exports = authRouter;
 

@@ -281,8 +281,8 @@ userRouter.post("/api/user-order", auth, async (req, res) => {
 userRouter.get("/api/get-user-order", auth, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user });
+    console.log(orders);
     res.status(200).json(orders);
-    // console.log(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
