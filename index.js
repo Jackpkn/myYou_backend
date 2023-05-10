@@ -9,6 +9,7 @@ const AuthRoute = require("./routes/authontication");
 const AdminRoute = require("./routes/admin/adminadd");
 const userRouter = require("./routes/user");
 const categoryRoute = require("./routes/category");
+const orderRouter = require("./routes/order");
 
 require("./routes/authontication");
 require("./mongodb_connection");
@@ -26,6 +27,7 @@ app.use("/", AdminRoute);
 app.use("/", userRouter);
 app.use("/", productRouter);
 app.use("/", categoryRoute);
+app.use('/', orderRouter);
 // app.use("/upload", express.static("upload"));
 // for handling http error
 app.use(async (req, res, next) => {

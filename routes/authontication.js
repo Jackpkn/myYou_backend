@@ -16,7 +16,7 @@ const User = require("../models/user_auth_model");
 const { OAuth2Client } = require("google-auth-library");
 const CLIENT_id = process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_API_ID
 const oAuth2Client = new OAuth2Client(CLIENT_id)
- 
+
 const kycModel = require("../models/kycmodel");
 authRouter.post('/api/auth/google-signin', async (req, res) => {
   const { idToken, accessToken } = req.body;
@@ -31,11 +31,11 @@ authRouter.post('/api/auth/google-signin', async (req, res) => {
 
     const payload = googleUser.getPayload();
 
-//     //     // Check if the user exists in your database
+    //     //     // Check if the user exists in your database
     let user = await User.findOne({ googleId: payload.sub });
 
     if (!user) {
-//       //       // If the user does not exist, create a new user
+      //       //       // If the user does not exist, create a new user
       user = new User({
         googleId: payload.sub,
         email: payload.email,
@@ -46,10 +46,10 @@ authRouter.post('/api/auth/google-signin', async (req, res) => {
       await user.save();
     }
 
-//     //     // Generate your unique JWT token for this user or perform other actions
+    //     //     // Generate your unique JWT token for this user or perform other actions
 
-    res.status(200).json(user);
     console.log('success');
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: 'Error occurred during authentication.' });
   }
@@ -231,12 +231,12 @@ authRouter.post(
             },
           }
         ).then(res.status(200).json({ msg: "Password changed successfully" }));
-      } else {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+      } else {
         return res.status(401).json({ msg: "Password didn't match" });
       }
     } catch (error) {
-        return res.status(400).json({ error: error.message });
-      }
+      return res.status(400).json({ error: error.message });
+    }
   })
 );
 
@@ -380,8 +380,7 @@ authRouter.put("/auth/update-user-address", async (req, res) => {
     console.log(error);
   }
 });
-// firebase chat app differential equation project DSA server that the equation which is come in picture that why this is amazing picture of the download the 
-// that will
+
 
 module.exports = authRouter;
 

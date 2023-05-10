@@ -205,7 +205,7 @@ userRouter.put("/api/rating", auth, async (req, res) => {
             "ratings.$.message": message,
             // "ratings.$.postedBy": req.user,
           },
-        },
+      },
         {
           new: true,
         }
@@ -303,7 +303,7 @@ userRouter.put("/api/like/:id", auth, async (req, res) => {
       }
     );
     res.json(product);
-    console.log(product);
+    // console.log(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -319,8 +319,8 @@ userRouter.put("/api/disLike/:id", auth, async (req, res) => {
       { new: true }
     );
 
+    // console.log(product);
     res.json(product);
-    console.log(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
